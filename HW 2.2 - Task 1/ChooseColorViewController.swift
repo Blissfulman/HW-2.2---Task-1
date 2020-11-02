@@ -28,9 +28,7 @@ class ChooseColorViewController: UIViewController {
     // MARK: - Properties
     var delegate: StartViewControllerDelegate!
     var chosenColor: UIColor!
-    
-    private let viewCornerRadius: CGFloat = 15
-    
+        
     // MARK: - Types
     enum UpdateMode {
         case red, green, blue, all
@@ -46,7 +44,7 @@ class ChooseColorViewController: UIViewController {
         greenColorTextField.delegate = self
         blueColorTextField.delegate = self
 
-        paintedView.layer.cornerRadius = viewCornerRadius
+        paintedView.layer.cornerRadius = 15
         updateObjects(for: .all)
         
         addDoneButtonOnKeyboard(for: redColorTextField)
@@ -91,45 +89,40 @@ class ChooseColorViewController: UIViewController {
     }
     
     private func updateObjects(for mode: UpdateMode) {
-        let colorComponents = chosenColor.components
-        guard let components = colorComponents else { return }
+        let ciColor = CIColor(color: chosenColor)
         
         switch mode {
         case .red, .all:
-            redColorLabel.text = getStringValue(from: components.red)
-            redColorSlider.value = Float(components.red)
-            redColorTextField.text = getStringValue(from: components.red)
+            redColorLabel.text = getStringValue(from: ciColor.red)
+            redColorSlider.value = Float(ciColor.red)
+            redColorTextField.text = getStringValue(from: ciColor.red)
             if mode == .all { fallthrough }
         case .green:
-            greenColorLabel.text = getStringValue(from: components.green)
-            greenColorSlider.value = Float(components.green)
-            greenColorTextField.text = getStringValue(from: components.green)
+            greenColorLabel.text = getStringValue(from: ciColor.green)
+            greenColorSlider.value = Float(ciColor.green)
+            greenColorTextField.text = getStringValue(from: ciColor.green)
             if mode == .all { fallthrough }
         case .blue:
-            blueColorLabel.text = getStringValue(from: components.blue)
-            blueColorSlider.value = Float(components.blue)
-            blueColorTextField.text = getStringValue(from: components.blue)
+            blueColorLabel.text = getStringValue(from: ciColor.blue)
+            blueColorSlider.value = Float(ciColor.blue)
+            blueColorTextField.text = getStringValue(from: ciColor.blue)
         }
         paintedView.backgroundColor = chosenColor
     }
     
     private func addDoneButtonOnKeyboard(for textField: UITextField) {
-        let doneToolbar = UIToolbar(frame: CGRect(x: 0,
-                                                  y: 0,
-                                                  width: view.frame.width,
-                                                  height: 50))
-        doneToolbar.barStyle = .default
+        let keyboardToolbar = UIToolbar()
+        keyboardToolbar.sizeToFit()
+        textField.inputAccessoryView = keyboardToolbar
+        
         let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace,
                                         target: nil,
                                         action: nil)
         let doneButton = UIBarButtonItem(title: "Done",
-                                   style: .done,
-                                   target: self,
-                                   action: #selector(doneKeyAction))
-        doneToolbar.items = [flexSpace, doneButton]
-        doneToolbar.sizeToFit()
-        
-        textField.inputAccessoryView = doneToolbar
+                                         style: .done,
+                                         target: self,
+                                         action: #selector(doneKeyAction))
+        keyboardToolbar.items = [flexSpace, doneButton]
     }
 }
 
@@ -141,33 +134,21 @@ extension ChooseColorViewController: UITextFieldDelegate {
         view.endEditing(true)
     }
     
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
-    }
-    
     func textFieldDidEndEditing(_ textField: UITextField) {
         guard let text = textField.text else { return }
         guard let value = Float(text) else { return }
         
         switch textField {
         case redColorTextField:
-            redColorSlider.value = value
+            redColorSlider.setValue(value, animated: true)
             colorSlidersChanged(redColorSlider)
         case greenColorTextField:
-            greenColorSlider.value = value
+            greenColorSlider.setValue(value, animated: true)
             colorSlidersChanged(greenColorSlider)
         case blueColorTextField:
-            blueColorSlider.value = value
+            blueColorSlider.setValue(value, animated: true)
             colorSlidersChanged(blueColorSlider)
         default: break
         }
-    }
-}
-
-extension UIColor {
-    var components: (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        return getRed(&r, green: &g, blue: &b, alpha: &a) ? (r, g, b, a) : nil
     }
 }
